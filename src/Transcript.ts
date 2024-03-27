@@ -58,6 +58,8 @@ export class Transcript {
     }
 
     public getSegmentAt(time: number): [number | undefined, TranscriptSegment | undefined] {
+        let quote = this.getQuote(0, 500);
+        return [0, new TranscriptSegment(0,0,100,quote[2])];
         for (let i = 0; i < this.segments.length; i++) {
             const segment = this.segments[i];
             if (segment.start <= time && time < segment.end) {

@@ -821,12 +821,23 @@ export default class AutomaticAudioNotes extends Plugin {
 			if (audioDiv === undefined || audio === undefined) {
 				return calloutDiv;
 			}
-			calloutDiv.appendChild(audioDiv);
+			calloutDiv.prepend(audioDiv);
 			MarkdownRenderer.renderMarkdown(
 				``,
 				calloutDiv,
 				currentMdFilename,
 				this
+			);
+
+			let quoteEl = contentEl.firstChild as HTMLParagraphElement;
+			this.transcriptDatastore
+			.getTranscript(audioNote.transcriptFilename)
+			.then((transcript: Transcript | undefined) => {
+				if (transcript) {
+					const [i, segment] = transcript.getSegmentAt(0);
+					quoteEl.textContent = segment.text;
+				}
+			}
 			);
 
 			// Enable Live Update. This has to be here because we need access to both the HTML quote element and the audio div.
@@ -862,44 +873,44 @@ export default class AutomaticAudioNotes extends Plugin {
 			.then((transcript: Transcript | undefined) => {
 				if (transcript) {
 					const currentTime = audioPlayer.currentTime;
-					const [i, segment] = transcript.getSegmentAt(currentTime);
+					const [i, segment] = transcript.getSegmentAt(currentTime);					
 					if (i && segment) {
 						quoteEl.textContent = segment.text;
 
 						// Make a new callback
-						const makeCallback = (
-							transcript: Transcript,
-							i: number
-						) => {
-							const nextSegment = transcript.segments[i + 1]; // returns `undefined` if index is out of range
-							if (nextSegment !== undefined) {
-								const callback = () => {
-									if (audioPlayer.currentTime >= nextSegment.start) {
-										quoteEl.textContent = nextSegment.text;
-										audioPlayer.removeEventListener(
-											"timeupdate",
-											(audioPlayer as any).liveUpdateCallback
-										);
-										const newCallback = makeCallback(transcript, i + 1);
-										if (newCallback) {
-											newCallback();
-										}
-									}
-								};
-								(audioPlayer as any).liveUpdateCallback = callback;
-								audioPlayer.addEventListener(
-									"timeupdate",
-									callback
-								);
-								return callback;
-							}
+						// const makeCallback = (
+						// 	transcript: Transcript,
+						// 	i: number
+						// ) => {
+						// 	const nextSegment = transcript.segments[i + 1]; // returns `undefined` if index is out of range
+						// 	if (nextSegment !== undefined) {
+						// 		const callback = () => {
+						// 			if (audioPlayer.currentTime >= nextSegment.start) {
+						// 				quoteEl.textContent = nextSegment.text;
+						// 				audioPlayer.removeEventListener(
+						// 					"timeupdate",
+						// 					(audioPlayer as any).liveUpdateCallback
+						// 				);
+						// 				const newCallback = makeCallback(transcript, i + 1);
+						// 				if (newCallback) {
+						// 					newCallback();
+						// 				}
+						// 			}
+						// 		};
+						// 		(audioPlayer as any).liveUpdateCallback = callback;
+						// 		audioPlayer.addEventListener(
+						// 			"timeupdate",
+						// 			callback
+						// 		);
+						// 		return callback;
+						// 	}
 
-							return undefined;
-						};
-						const newCallback = makeCallback(transcript, i);
-						if (newCallback) {
-							newCallback();
-						}
+						// 	return undefined;
+						// };
+						// const newCallback = makeCallback(transcript, i);
+						// if (newCallback) {
+						// 	newCallback();
+						// }
 					} // end of if (i && segment) statement
 				}
 			});
