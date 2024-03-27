@@ -875,42 +875,44 @@ export default class AutomaticAudioNotes extends Plugin {
 					const currentTime = audioPlayer.currentTime;
 					const [i, segment] = transcript.getSegmentAt(currentTime);					
 					if (i && segment) {
-						quoteEl.textContent = segment.text;
-
+						const ind = quoteEl.textContent?.indexOf(segment.text);
+						const quote = quoteEl.textContent?.substring(0, ind) + segment.text.toUpperCase() + quoteEl.textContent?.substring(ind + segment.text.length);
+						quoteEl.textContent = quote;
+						//Store transcript in object, configure which section is highglighted then call to string or something that concats and formats.
 						// Make a new callback
-						// const makeCallback = (
-						// 	transcript: Transcript,
-						// 	i: number
-						// ) => {
-						// 	const nextSegment = transcript.segments[i + 1]; // returns `undefined` if index is out of range
-						// 	if (nextSegment !== undefined) {
-						// 		const callback = () => {
-						// 			if (audioPlayer.currentTime >= nextSegment.start) {
-						// 				quoteEl.textContent = nextSegment.text;
-						// 				audioPlayer.removeEventListener(
-						// 					"timeupdate",
-						// 					(audioPlayer as any).liveUpdateCallback
-						// 				);
-						// 				const newCallback = makeCallback(transcript, i + 1);
-						// 				if (newCallback) {
-						// 					newCallback();
-						// 				}
-						// 			}
-						// 		};
-						// 		(audioPlayer as any).liveUpdateCallback = callback;
-						// 		audioPlayer.addEventListener(
-						// 			"timeupdate",
-						// 			callback
-						// 		);
-						// 		return callback;
-						// 	}
+						const makeCallback = (
+							transcript: Transcript,
+							i: number
+						) => {
+							const nextSegment = transcript.segments[i + 1]; // returns `undefined` if index is out of range
+							if (nextSegment !== undefined) {
+								const callback = () => {
+									if (audioPlayer.currentTime >= nextSegment.start) {
+										quoteEl.textContent = nextSegment.text;
+										audioPlayer.removeEventListener(
+											"timeupdate",
+											(audioPlayer as any).liveUpdateCallback
+										);
+										const newCallback = makeCallback(transcript, i + 1);
+										if (newCallback) {
+											newCallback();
+										}
+									}
+								};
+								(audioPlayer as any).liveUpdateCallback = callback;
+								audioPlayer.addEventListener(
+									"timeupdate",
+									callback
+								);
+								return callback;
+							}
 
-						// 	return undefined;
-						// };
-						// const newCallback = makeCallback(transcript, i);
-						// if (newCallback) {
-						// 	newCallback();
-						// }
+							return undefined;
+						};
+						const newCallback = makeCallback(transcript, i);
+						if (newCallback) {
+							newCallback();
+						}
 					} // end of if (i && segment) statement
 				}
 			});
