@@ -834,8 +834,8 @@ export default class AutomaticAudioNotes extends Plugin {
 			.getTranscript(audioNote.transcriptFilename)
 			.then((transcript: Transcript | undefined) => {
 				if (transcript) {
-					const [i, segment] = transcript.getSegmentAt(0);
-					quoteEl.textContent = segment.text;
+					const entireTranscript = transcript.getEntireTranscript();
+					quoteEl.textContent = entireTranscript;
 				}
 			}
 			);

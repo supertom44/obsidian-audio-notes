@@ -57,6 +57,30 @@ export class Transcript {
         return [start, end, quoteText];
     }
 
+    public getEntireTranscript(): string {
+        const segments = this.segments;
+        const result = [];
+        for (let segment of segments) {
+            result.push(segment.text);
+        }
+
+        let quoteText = result.join(" ").trim();
+        if (quoteText) {
+            // For some reason double spaces are often in the text. Remove them because they get removed by the HTML rendering anyway.
+            let i = 0;
+            while (quoteText.includes("  ")) {
+                quoteText = quoteText.replace(new RegExp("  "), " ");
+                // Make sure we don't hit an infinite loop, even though it should be impossible.
+                i += 1;
+                if (i > 100) {
+                    break;
+                }
+            }
+        }
+
+        return quoteText;
+    }
+
     public getSegmentAt(time: number): [number | undefined, TranscriptSegment | undefined] {
         let quote = this.getQuote(0, 500);
         return [0, new TranscriptSegment(0,0,100,quote[2])];
